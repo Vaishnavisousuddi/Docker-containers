@@ -1,6 +1,6 @@
 Overview
 
-This repository contains multiple hands-on Docker projects demonstrating Docker concepts including images, containers, networking, multi-stage builds, and multi-language applications. These projects are designed for learning and practice.
+This repository contains multiple hands-on Docker projects demonstrating Docker concepts including images, containers, networking, and multi-language applications. These projects are designed for learning and practice.
 
 Projects Included
 1️⃣ Static Website

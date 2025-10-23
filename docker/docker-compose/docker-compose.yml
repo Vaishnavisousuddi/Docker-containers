@@ -1,0 +1,26 @@
+version: "3.8"
+services:
+  mysql-db:
+    image: mysql:5.7
+    container_name: mysql-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: userdata
+    ports:
+      - "3306:3306"
+
+  flask-app:
+    build: .
+    container_name: flask-app
+    restart: always
+    depends_on:
+      - mysql-db
+    environment:
+      MYSQL_HOST: mysql-db
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: userdata
+    ports:
+      - "5000:5000"
+    command: sh -c "sleep 15 && python app.py"  # wait for MySQL

@@ -20,8 +20,6 @@ Usage:
 docker build -t static-website .
 docker run -d -p 8081:80 static-website
 
-
-Access: http://localhost:8081
 --------------------------------------------------------------------------------------------------------------- 
 2️⃣ Node.js + Redis (Networking Example)
 
@@ -41,9 +39,6 @@ docker network create custom-net
 docker run -d --name redis-container --network custom-net redis
 docker build -t node-redis-bridge .
 docker run -d -p 3000:3000 --name node-app --network custom-net node-redis-bridge
-
-
-Access: http://localhost:3000
 
 Notes:
 
@@ -65,9 +60,6 @@ Usage:
 
 docker build -t node-host-app .
 docker run -d --network host --name node-host node-host-app
-
-
-Access: http://localhost:5000
 
 Notes:
 
@@ -94,8 +86,6 @@ docker run -d --name mysql-db --network custom-net -e MYSQL_ROOT_PASSWORD=root -
 docker build -t flask-mysql-app .
 docker run -d -p 5000:5000 --name flask-app --network custom-net flask-mysql-app
 
-
-Access: http://localhost:5000
 
 Notes:
 

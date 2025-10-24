@@ -1,0 +1,12 @@
+{
+  "name": "quote-api",
+  "version": "1.0.0",
+  "description": "Random Quote API using Node.js",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

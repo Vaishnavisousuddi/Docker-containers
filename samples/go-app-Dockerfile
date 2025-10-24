@@ -1,0 +1,26 @@
+# ---------- Stage 1: Build the Go app ----------
+FROM golang:1.20 AS builder
+
+WORKDIR /app
+COPY . .
+
+# Download dependencies
+RUN go mod tidy
+
+# Build the Go app (static binary)
+RUN go build -o myapp .
+
+
+# ---------- Stage 2: Run the Go app in a minimal container ----------
+FROM alpine:latest
+
+WORKDIR /root/
+
+# Copy only the static binary from the builder stage
+COPY --from=builder /app/myapp .
+
+# Expose port 8080
+EXPOSE 8080
+
+# Run the app
+CMD ["./myapp"]

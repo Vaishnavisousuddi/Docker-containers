@@ -1,0 +1,21 @@
+# ---------- Stage 1: Build dependencies ----------
+FROM ruby:3.1-alpine AS builder
+
+WORKDIR /app
+COPY Gemfile Gemfile.lock ./
+RUN bundle install
+
+# Copy app files
+COPY . .
+
+# ---------- Stage 2: Final image ----------
+FROM ruby:3.1-alpine
+
+WORKDIR /app
+COPY --from=builder /app /app
+
+# Set up and precompile assets (Rails)
+RUN bundle exec rake assets:precompile
+
+EXPOSE 3000
+CMD ["rails", "server", "-b", "0.0.0.0"]

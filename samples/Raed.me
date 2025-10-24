@@ -1,0 +1,148 @@
+Stage 1: Building the React App
+FROM node:18-alpine AS build
+
+
+FROM node:18-alpine: This tells Docker to use the node:18-alpine image as the base image. Alpine is a lightweight version of Linux, which makes it smaller.
+
+AS build: This names the stage build. The name of a stage helps you refer to it later in the COPY --from=<stage> command.
+
+WORKDIR /app
+
+
+WORKDIR /app: This sets the working directory inside the container to /app. All following commands will be executed from this directory.
+
+COPY package*.json ./
+
+
+*COPY package.json ./**: Copies the package.json and package-lock.json (both needed for npm) into the container. It is good practice to copy these files first to take advantage of Docker's caching mechanism. If the dependencies don’t change, Docker will cache this step and not run npm install again.
+
+RUN npm install
+
+
+RUN npm install: Runs the command npm install to install the dependencies for the React app. This will install everything listed in package.json.
+
+COPY . .
+
+
+COPY . .: This copies all the files from your local machine (the . on the left) into the /app directory in the container (the . on the right). Now, your React app code is inside the container.
+
+RUN npm run build
+
+
+RUN npm run build: Runs the build command in React. This creates the production-ready static files in the build/ directory. These are optimized and ready to be served.
+
+Stage 2: Serving with Nginx
+FROM nginx:alpine
+
+
+FROM nginx:alpine: Starts a new stage using the Nginx base image. We are now in the production stage, so we use a lightweight Nginx image to serve the static files.
+
+COPY --from=build /app/build /usr/share/nginx/html
+
+
+COPY --from=build /app/build /usr/share/nginx/html: This line copies the build directory from the build stage and places it inside the Nginx container's html directory, which is the default folder Nginx serves from.
+
+The --from=build tells Docker to copy from the previous stage called build.
+
+EXPOSE 80
+
+
+EXPOSE 80: Exposes port 80. This is the default port Nginx uses to serve web content.
+
+CMD ["nginx", "-g", "daemon off;"]
+
+
+CMD ["nginx", "-g", "daemon off;"]: This command starts Nginx when the container runs. The -g "daemon off;" option makes Nginx run in the foreground (so the container doesn’t exit immediately after running).
+
+How Multi-Stage Build Works Here
+
+Stage 1 (build stage):
+
+Uses node:18-alpine to build the React app.
+
+Installs dependencies and compiles the app into static files in the /build directory.
+
+Stage 2:
+
+Uses nginx:alpine to serve the React app using Nginx.
+
+Copies only the production build (the /build directory) into the Nginx container.
+
+This keeps the final container size small because it doesn’t include the Node.js environment, npm, or any development dependencies.
+
+Why Use Multi-Stage Builds?
+
+Smaller Images: The final image only contains what's necessary to run the app — in this case, just the React app and Nginx, but not the full Node.js build environment.
+
+Separation of Concerns: The build process is separated from the runtime process. This makes it cleaner and easier to manage.
+
+Faster Builds: If you change your source code but not your dependencies, Docker can cache previous stages, making builds faster.
+
+Another Example: Python Flask App (With Tests
+)
+----------------------------------------------------------------------- 
+Let’s go through a Python Flask app example where we build the app, run tests, and then deploy.
+
+# ---------- Stage 1: Install dependencies and run tests ----------
+FROM python:3.11-slim AS builder
+
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the app source code
+COPY . .
+
+# Run tests (e.g., using pytest)
+RUN pytest tests/
+
+
+# ---------- Stage 2: Deploy the app ----------
+FROM python:3.11-slim
+
+WORKDIR /app
+COPY --from=builder /app /app
+
+# Set environment variables and configure
+ENV FLASK_APP=app.py
+
+# Expose port 5000 for Flask
+EXPOSE 5000
+
+CMD ["flask", "run", "--host=0.0.0.0"]
+
+Stage 1 (Builder Stage)
+
+FROM python:3.11-slim: We use a slim Python image to keep it lightweight.
+
+WORKDIR /app: Set /app as the working directory.
+
+COPY requirements.txt .: Copy only the requirements.txt to avoid re-installing dependencies unnecessarily.
+
+RUN pip install: Install dependencies listed in requirements.txt.
+
+COPY . .: Copy the rest of the app's source code.
+
+RUN pytest tests/: Run tests on the source code to ensure it’s correct.
+
+Stage 2 (Deploy Stage)
+
+FROM python:3.11-slim: Start a new stage with a clean Python image.
+
+WORKDIR /app: Set /app as the working directory.
+
+COPY --from=builder /app /app: Copy the /app directory from the builder stage (this includes the app source code and installed dependencies).
+
+ENV FLASK_APP=app.py: Set the environment variable for Flask to know which file to run.
+
+EXPOSE 5000: Expose port 5000 for Flask.
+
+CMD ["flask", "run"]: Start the Flask app.
+
+Key Points to Understand:
+
+Multiple FROM statements create isolated stages for building and deploying.
+
+COPY --from=builder lets you copy files from one stage to another, allowing you to only include the necessary parts in the final image.
+
+Caching: Docker caches each layer, so unchanged parts of your Dockerfile (like RUN npm install) are not re-run if the dependencies haven’t changed.
